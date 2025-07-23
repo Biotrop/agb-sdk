@@ -10,21 +10,34 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "pydantic (>=2.11.7,<3.0.0)",
-    "requests (>=2.32.4,<3.0.0)"
+    "requests (>=2.32.4,<3.0.0)",
+    "pytest (>=8.4.1,<9.0.0)",
+    "aiohttp (>=3.12.14,<4.0.0)",
+    "pytest-asyncio (>=1.1.0,<2.0.0)",
+    "pandas (>=2.3.1,<3.0.0)"
 ]
 
 [tool.poetry]
 packages = [
-    { include = "agb-sdk", from = "src" },
+    { include = "agb_sdk", from = "src" },
     { include = "tests", from = "src" },
 ]
 
-#[tool.poetry.scripts]
-#agb = "agb.ports.cli.main:agb_cmd"
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+log_format = "%(asctime)s %(levelname)s %(message)s"
+log_date_format = "%Y-%m-%d %H:%M:%S"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+# ? ----------------------------------------------------------------------------
+# ? Entrypoint
+# ? ----------------------------------------------------------------------------
+
+#[tool.poetry.scripts]
+#agb = "agb.ports.cli.main:agb_cmd"
 
 # ? ----------------------------------------------------------------------------
 # ? Code consistence
