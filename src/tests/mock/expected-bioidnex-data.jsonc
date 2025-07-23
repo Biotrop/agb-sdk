@@ -1,0 +1,230 @@
+{
+    // FROM: id
+    "id": "b328e7f3-6a94-4d36-ae6d-94eccc9585ac",
+    // FROM: hash
+    "hash": "96dba99d99c5dec555efa49d1655ebf9",
+    // FROM: hash
+    "version": 2,
+    // FROM: updatedAt
+    "updatedAt": "2024-07-05 18:53:37.281 +00:00",
+    "results": [
+        {
+            "sample": "AGROBIO220229",
+            "diversity": {
+                "statistics": {
+                    "faithPd": {
+                        "fungi": {
+                            "value": 153.4413466497648,
+                            "inverseConfidence": 0.006517241379310345
+                        },
+                        "bacteria": {
+                            "value": 65.06436284989323,
+                            "inverseConfidence": 0.01537037037037037
+                        }
+                    },
+                    "shannon": {
+                        "fungi": {
+                            "value": 6.537561454695085,
+                            "inverseConfidence": 0.1529770992366412
+                        },
+                        "bacteria": {
+                            "value": 9.33721201269486,
+                            "inverseConfidence": 0.10711409395973154
+                        }
+                    },
+                    "richness": {
+                        "fungi": {
+                            "value": 699.3,
+                            "inverseConfidence": 0.0014328651343280576
+                        },
+                        "bacteria": {
+                            "value": 751.8,
+                            "inverseConfidence": 0.00132996632996633
+                        }
+                    }
+                },
+                "communityComposition": [
+                    {
+                        "taxon": "Amycolatopsis",
+                        "key": "1386",
+                        "keyType": "taxid",
+                        "count": 22005,
+                        "isPathogenic": false
+                    },
+                    {
+                        "taxon": "Niallia circulans",
+                        "key": "1397",
+                        "keyType": "taxid",
+                        "count": 6218,
+                        "isPathogenic": false
+                    },
+                    {
+                        "taxon": "Brevibacillus",
+                        "key": "55080",
+                        "keyType": "taxid",
+                        "count": 4599,
+                        "isPathogenic": true
+                    }
+                ]
+            },
+            // FROM: gghIndexLevel1
+            "ggh": 8.374423513071894,
+            //
+            // GGH Index for Biodiversity
+            //
+            "by_dimension": {
+                "biodiversity": {
+                    // FROM: children[n].gghIndexLevel2
+                    "ggh": 8.0766,
+                    "by_process": [
+                        {
+                            "processs": "faith-pd",
+                            // FROM: children[n].children[n].gghIndexLevel3
+                            "ggh": 8.0766
+                        }
+                    ]
+                },
+                //
+                // GGH Index for Biological Agents
+                //
+                // Select the higher value between taxonomy and functional for
+                // the GGH Index Level 2
+                //
+                "biological-agents": {
+                    // FROM: children[n].gghIndexLevel2
+                    "ggh": 8.615583333333333,
+                    "by_process": [
+                        {
+                            "processs": "bactericide",
+                            // FROM: children[n].children[n].gghIndexLevel3
+                            "ggh": 8.3983
+                        },
+                        {
+                            "processs": "biofungicide",
+                            // FROM: children[n].children[n].gghIndexLevel3
+                            "ggh": 9.1652
+                        },
+                        {
+                            "processs": "bioinsecticide",
+                            // FROM: children[n].children[n].gghIndexLevel3
+                            "ggh": 9.5139
+                        },
+                        {
+                            "processs": "drought-tolerance",
+                            // FROM: children[n].children[n].gghIndexLevel3
+                            "ggh": 5.9587
+                        },
+                        {
+                            "processs": "plant-growth-promotion",
+                            // FROM: children[n].children[n].gghIndexLevel3
+                            "ggh": 9.0679
+                        },
+                        {
+                            "processs": "stress-adaptation",
+                            // FROM: children[n].children[n].gghIndexLevel3
+                            "ggh": 7.4687
+                        }
+                    ]
+                },
+                //
+                // GGH Index for Biological Fertility
+                //
+                // Select the higher value between taxonomy and functional for
+                // the GGH Index Level 2
+                //
+                "biological-fertility": {
+                    // FROM: children[n].gghIndexLevel2
+                    "ggh": 8.615583333333333,
+                    "by_process": [
+                        {
+                            "processs": "biological-nitrogenFixation",
+                            // FROM: children[n].children[n].gghIndexLevel3
+                            "ggh": 8.3983,
+                            "group": "macro-elements"
+                        },
+                        {
+                            "processs": "potassium-bioavailability",
+                            // FROM: children[n].children[n].gghIndexLevel3
+                            "ggh": 8.3983,
+                            "group": "macro-elements"
+                        },
+                        {
+                            "processs": "phosphorus-bioavailability",
+                            // FROM: children[n].children[n].gghIndexLevel3
+                            "ggh": 9.1652,
+                            "group": "macro-elements"
+                        },
+                        {
+                            "processs": "sulphur-bioavailability",
+                            // FROM: children[n].children[n].gghIndexLevel3
+                            "ggh": 9.5139,
+                            "group": "micro-elements"
+                        },
+                        {
+                            "processs": "zinc-bioavailability",
+                            // FROM: children[n].children[n].gghIndexLevel3
+                            "ggh": 9.5895,
+                            "group": "micro-elements"
+                        },
+                        {
+                            "processs": "calcium-bioavailability",
+                            // FROM: children[n].children[n].gghIndexLevel3
+                            "ggh": 5.9587,
+                            "group": "micro-elements"
+                        },
+                        {
+                            "processs": "magnesium-bioavailability",
+                            // FROM: children[n].children[n].gghIndexLevel3
+                            "ggh": 9.0679,
+                            "group": "micro-elements"
+                        },
+                        {
+                            "processs": "iron-bioavailability",
+                            // FROM: children[n].children[n].gghIndexLevel3
+                            "ggh": 8.0766,
+                            "group": "micro-elements"
+                        },
+                        {
+                            "processs": "manganese-bioavailability",
+                            // FROM: children[n].children[n].gghIndexLevel3
+                            "ggh": 8.0766,
+                            "group": "micro-elements"
+                        },
+                        {
+                            "processs": "copper-bioavailability",
+                            // FROM: children[n].children[n].gghIndexLevel3
+                            "ggh": 8.0766,
+                            "group": "micro-elements"
+                        }
+                    ]
+                },
+                //
+                // GGH Index for Pathogenicity
+                //
+                // Only taxonomic values should be used for the GGH Index Level 2
+                //
+                "phytosanitary-risk": {
+                    // FROM: children[n].gghIndexLevel2
+                    "ggh": 6.8745666666666665,
+                    "by_process": [
+                        {
+                            "processs": "fungal-pathogenicity",
+                            // FROM: children[n].children[n].gghIndexLevel3
+                            "ggh": 6.8745666666666665
+                        },
+                        {
+                            "processs": "bacterial-pathogenicity",
+                            // FROM: children[n].children[n].gghIndexLevel3
+                            "ggh": 6.8745666666666665
+                        },
+                        {
+                            "processs": "nematode-pathogenicity",
+                            // FROM: children[n].children[n].gghIndexLevel3
+                            "ggh": 6.8745666666666665
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}
