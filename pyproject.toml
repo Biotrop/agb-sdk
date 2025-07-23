@@ -13,7 +13,42 @@ dependencies = [
     "requests (>=2.32.4,<3.0.0)"
 ]
 
+[tool.poetry]
+packages = [
+    { include = "agb-sdk", from = "src" },
+    { include = "tests", from = "src" },
+]
+
+#[tool.poetry.scripts]
+#agb = "agb.ports.cli.main:agb_cmd"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+# ? ----------------------------------------------------------------------------
+# ? Code consistence
+# ? ----------------------------------------------------------------------------
+
+[tool.mypy]
+python_version = "3.12"
+exclude = ["build/", "dist/", "docs/", "venv/"]
+ignore_missing_imports = true
+follow_imports = "normal"
+warn_redundant_casts = true
+warn_unused_ignores = false
+disallow_any_generics = true
+check_untyped_defs = true
+no_implicit_reexport = true
+namespace_packages = false
+disallow_untyped_defs = true
+
+[tool.attrs-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+warn_untyped_fields = true
+
+[tool.flake8]
+ignore = "E722, W503, E501, E203"
+per-file-ignore = "**/__init__.py: F401"
