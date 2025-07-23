@@ -1,7 +1,7 @@
-import json
 import logging
 
 import pytest
+
 from agb_sdk.core.dtos.biotrop_bioindex import BiotropBioindex
 
 logger = logging.getLogger(__name__)
