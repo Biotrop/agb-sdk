@@ -45,8 +45,15 @@ async def test_resolve_taxonomy_of_biotrop_bioindex(
 ) -> None:
     result = await sample_data.resolve_taxonomies()
 
-    for result in sample_data.results:
-        print(result.diversity.community_composition)
-
     assert result is not None
-    # assert isinstance(result, BiotropBioindex)
+    assert isinstance(result, BiotropBioindex)
+
+    assert len(result.results[0].diversity.community_composition) == 34
+    assert len(result.results[1].diversity.community_composition) == 24
+
+    expected_taxons = [
+        record.taxon for record in result.results[0].diversity.community_composition
+    ]
+
+    for taxon in ["Burkholderia", "Kocuria"]:
+        assert taxon in expected_taxons
