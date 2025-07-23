@@ -15,7 +15,8 @@ dependencies = [
     "aiohttp (>=3.12.14,<4.0.0)",
     "pytest-asyncio (>=1.1.0,<2.0.0)",
     "pandas (>=2.3.1,<3.0.0)",
-    "openpyxl (>=3.1.5,<4.0.0)"
+    "openpyxl (>=3.1.5,<4.0.0)",
+    "rich-click (>=1.8.9,<2.0.0)"
 ]
 
 [tool.poetry]
@@ -40,8 +41,8 @@ build-backend = "poetry.core.masonry.api"
 # ? Entrypoint
 # ? ----------------------------------------------------------------------------
 
-#[tool.poetry.scripts]
-#agb = "agb.ports.cli.main:agb_cmd"
+[tool.poetry.scripts]
+agb-sdk = "agb_sdk.ports.cli.main:main"
 
 # ? ----------------------------------------------------------------------------
 # ? Code consistence

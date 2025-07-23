@@ -122,8 +122,8 @@ async def convert_bioindex_to_tabular(
                 {
                     "sample": result.sample,
                     "dimension": "biological_fertility",
-                    "process": process.process,
                     "group": process.group,
+                    "process": process.process,
                     "ggh": process.ggh,
                 }
             )
