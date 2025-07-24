@@ -10,6 +10,7 @@ async def convert_bioindex_to_tabular(
     bioindex: BiotropBioindex,
     output_path: str,
     resolve_taxonomies: bool = True,
+    **kwargs,
 ) -> None:
     """Convert a BiotropBioindex to a Pandas DataFrame"""
 
@@ -24,7 +25,7 @@ async def convert_bioindex_to_tabular(
     # --------------------------------------------------------------------------
 
     if resolve_taxonomies:
-        bioindex = await bioindex.resolve_taxonomies()
+        bioindex = await bioindex.resolve_taxonomies(**kwargs)
 
     # --------------------------------------------------------------------------
     # 1. Summary data

@@ -7,7 +7,8 @@ from aiohttp.client_exceptions import ClientError
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
 
-from agb_sdk.core.dtos.biotax_response import BiotaxResponse, TaxonomyResponse
+from agb_sdk.core.dtos import BiotaxResponse, TaxonomyResponse
+from agb_sdk.settings import DEFAULT_TAXONOMY_URL
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -155,7 +156,7 @@ class BiotropBioindex(BaseModel):
     def __default_taxonomy_url(self) -> str:
         """The URL to the taxonomy of the Biotrop Bioindex."""
 
-        return "https://dev.api.agrobiota.biotrop.agr.br/v1/gw/biotax/taxids"
+        return DEFAULT_TAXONOMY_URL
 
     @property
     def __default_chunk_size(self) -> int:
@@ -181,7 +182,7 @@ class BiotropBioindex(BaseModel):
 
     async def resolve_taxonomies(
         self,
-        alternative_url: str | None = None,
+        **kwargs,
     ) -> Self:
         """Resolve the taxonomy of the Biotrop Bioindex."""
 
@@ -198,7 +199,7 @@ class BiotropBioindex(BaseModel):
             chunk_index = index + 1
 
             logger.info(f"Resolving taxonomy for chunk {chunk_index} of {chunk_total}")
-            results = await self.__batch_resolve_taxonomy(chunk, alternative_url)
+            results = await self.__batch_resolve_taxonomy(chunk, **kwargs)
             logger.info(f"Resolved taxonomy for chunk {chunk_index} of {chunk_total}")
 
             if results is None:
@@ -235,24 +236,24 @@ class BiotropBioindex(BaseModel):
     async def __batch_resolve_taxonomy(
         self,
         taxa: list[str],
-        alternative_url: str | None = None,
+        **kwargs,
     ) -> list[TaxonomyResponse | None]:
         """Resolve the taxonomy of the Biotrop Bioindex."""
 
-        tasks = [self.__resolve_taxonomy(taxid, alternative_url) for taxid in taxa]
+        tasks = [self.__resolve_taxonomy(taxid, **kwargs) for taxid in taxa]
         return await gather(*tasks)
 
     async def __resolve_taxonomy(
         self,
         taxid: str,
-        alternative_url: str | None = None,
+        taxonomy_url: str | None = None,
     ) -> TaxonomyResponse | None:
         """Resolve a single taxonomy of the Biotrop Bioindex."""
 
         try:
             async with ClientSession() as session:
                 async with session.get(
-                    f"{alternative_url or self.__default_taxonomy_url}/{taxid}",
+                    f"{taxonomy_url or self.__default_taxonomy_url}/{taxid}",
                     timeout=120,
                 ) as response:
                     if response.status > 200 and response.status < 300:
