@@ -2,7 +2,7 @@ import logging
 
 import pytest
 
-from agb_sdk.core.dtos.biotrop_bioindex import BiotropBioindex
+from agb_sdk.core.dtos import BiotropBioindex
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

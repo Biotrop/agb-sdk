@@ -2,12 +2,9 @@ import logging
 from pathlib import Path
 
 import pytest
-from pandas import DataFrame
 
-from agb_sdk.core.dtos.biotrop_bioindex import BiotropBioindex
-from agb_sdk.core.use_cases.convert_bioindex_to_tabular import (
-    convert_bioindex_to_tabular,
-)
+from agb_sdk.core.dtos import BiotropBioindex
+from agb_sdk.core.use_cases import convert_bioindex_to_tabular
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
