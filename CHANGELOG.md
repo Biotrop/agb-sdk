@@ -1,0 +1,16 @@
+## v0.1.0a1 (2025-07-24)
+
+### Feat
+
+- implements the cli port to convert tabular results
+- do implements the tabular parser function for bioindex results
+- implements the taxonomy resolver and rename the main project source
+
+### Fix
+
+- include dist and build to gitignore
+
+### Refactor
+
+- include all exporter to use-cases and dtos to avoid to load the full path on import dependencies
+- move the agb-sdk to an appropriated directory
