@@ -1,3 +1,13 @@
+## v0.1.0a4 (2025-07-25)
+
+### Feat
+
+- implements the analysis management features in cli
+
+### Fix
+
+- **analysis-conversion**: solve the analysis conversion issue that disable output saving
+
 ## v0.1.0a3 (2025-07-24)
 
 ## v0.1.0a2 (2025-07-24)
