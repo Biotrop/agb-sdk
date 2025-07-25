@@ -1,3 +1,9 @@
+## v0.1.0a5 (2025-07-25)
+
+### Fix
+
+- **env-var**: prompt to users the connection string env var
+
 ## v0.1.0a4 (2025-07-25)
 
 ### Feat
