@@ -109,6 +109,7 @@ async def convert_bioindex_to_tabular_cmd(
     "--connection-string",
     type=str,
     show_default=True,
+    show_envvar=True,
     envvar="AGB_CONNECTION_STRING",
     help="The connection string to the Agroportal API.",
 )

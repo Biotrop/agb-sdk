@@ -38,19 +38,12 @@ class BioindexIds(BaseModel):
     ids: List[str]
 
 
-class Meta(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
-
-    group: str
-    ticket_type: str
-
-
 class Tag(BaseModel):
     model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
 
     id: str
     value: str
-    meta: Meta
+    meta: Any
 
 
 class ResultSet(BaseModel):
