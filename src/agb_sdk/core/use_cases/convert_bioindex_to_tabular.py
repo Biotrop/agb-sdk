@@ -1,5 +1,5 @@
-from typing import Any
 from pathlib import Path
+from typing import Any
 
 from pandas import DataFrame, ExcelWriter
 
@@ -8,10 +8,10 @@ from agb_sdk.core.dtos.biotrop_bioindex import BiotropBioindex
 
 async def convert_bioindex_to_tabular(
     bioindex: BiotropBioindex,
-    output_path: str,
+    output_path: Path | None = None,
     resolve_taxonomies: bool = True,
     **kwargs,
-) -> None:
+) -> tuple[DataFrame, DataFrame, DataFrame, DataFrame, DataFrame, DataFrame] | None:
     """Convert a BiotropBioindex to a Pandas DataFrame"""
 
     by_sample_data: list[dict[str, Any]] = []
@@ -199,19 +199,33 @@ async def convert_bioindex_to_tabular(
     # 7. Persist as XLSX separated by tabs
     # --------------------------------------------------------------------------
 
-    output_path: Path = Path(output_path)
+    if output_path is not None and isinstance(output_path, Path):
+        if not output_path.parent.exists():
+            output_path.parent.mkdir(parents=True)
 
-    if not output_path.parent.exists():
-        output_path.parent.mkdir(parents=True)
+        output_path = output_path.with_suffix(".xlsx")
 
-    with ExcelWriter(output_path, mode="w") as writer:
-        frame.to_excel(writer, sheet_name="summary")
-        by_sample_data_frame.to_excel(writer, sheet_name="by_sample")
-        by_dimension_data_frame.to_excel(writer, sheet_name="by_dimension")
-        by_process_data_frame.to_excel(writer, sheet_name="by_process")
-        diversity_data_frame.to_excel(writer, sheet_name="diversity")
-        community_composition_data_frame.to_excel(
-            writer, sheet_name="community_composition"
-        )
+        with ExcelWriter(output_path, mode="w") as writer:
+            frame.to_excel(writer, sheet_name="summary")
+            by_sample_data_frame.to_excel(writer, sheet_name="by_sample")
+            by_dimension_data_frame.to_excel(writer, sheet_name="by_dimension")
+            by_process_data_frame.to_excel(writer, sheet_name="by_process")
+            diversity_data_frame.to_excel(writer, sheet_name="diversity")
+            community_composition_data_frame.to_excel(
+                writer, sheet_name="community_composition"
+            )
 
-    return None
+        return None
+
+    # --------------------------------------------------------------------------
+    # 8. Return the dataframes
+    # --------------------------------------------------------------------------
+
+    return (
+        frame,
+        by_sample_data_frame,
+        by_dimension_data_frame,
+        by_process_data_frame,
+        diversity_data_frame,
+        community_composition_data_frame,
+    )
