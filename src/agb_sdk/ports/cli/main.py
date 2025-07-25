@@ -1,5 +1,6 @@
 import asyncio
 from functools import wraps
+from pathlib import Path
 
 import rich_click as click
 
@@ -92,7 +93,7 @@ async def convert_bioindex_to_tabular_cmd(
 
     await convert_bioindex_to_tabular(
         bioindex,
-        output_path,
+        Path(output_path),
         resolve_taxonomies,
         **kwargs,
     )
