@@ -1,6 +1,7 @@
 import asyncio
 from functools import wraps
 from pathlib import Path
+from typing import Any
 
 import rich_click as click
 
@@ -9,13 +10,31 @@ from agb_sdk.core.dtos import AnalysisList, BiotropBioindex
 from agb_sdk.core.use_cases import convert_bioindex_to_tabular, list_analysis
 from agb_sdk.settings import DEFAULT_TAXONOMY_URL
 
+# ------------------------------------------------------------------------------
+# AUXILIARY ELEMENTS
+# ------------------------------------------------------------------------------
 
-def async_cmd(func):
+
+def __extend_options(options: list[Any]) -> Any:
+    def _extend_options(func: Any) -> Any:
+        for option in reversed(options):
+            func = option(func)
+        return func
+
+    return _extend_options
+
+
+def __async_cmd(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         return asyncio.run(func(*args, **kwargs))
 
     return wrapper
+
+
+# ------------------------------------------------------------------------------
+# GROUPS DEFINITIONS
+# ------------------------------------------------------------------------------
 
 
 @click.group(
@@ -43,137 +62,40 @@ def analysis_group():
     pass
 
 
-@convert_group.command("bioindex-to-tabular")
-@click.argument(
-    "input_path",
-    required=1,
-    type=click.Path(exists=True),
-)
-@click.argument(
-    "output_path",
-    required=1,
-    type=click.Path(),
-)
-@click.option(
-    "--resolve-taxonomies",
-    is_flag=True,
-    default=True,
-    show_default=True,
-    help=(
-        "If true, the taxonomies will be resolved from the taxonomy service. "
-        "Otherwise the TaxID values will be used as is."
+# ------------------------------------------------------------------------------
+# SHARED OPTIONS DEFINITIONS
+# ------------------------------------------------------------------------------
+
+
+__TAXONOMY_RELATED_OPTIONS = [
+    click.option(
+        "--resolve-taxonomies",
+        is_flag=True,
+        default=True,
+        show_default=True,
+        help=(
+            "If true, the taxonomies will be resolved from the taxonomy "
+            "service. Otherwise the TaxID values will be used as is. This "
+            "command should be used when the `REPORT_ID` parameter is provided."
+        ),
     ),
-)
-@click.option(
-    "--taxonomy-url",
-    type=str,
-    default=DEFAULT_TAXONOMY_URL,
-    show_default=True,
-    envvar="TAXONOMY_URL",
-    help="The URL to the taxonomy service.",
-)
-@async_cmd
-async def convert_bioindex_to_tabular_cmd(
-    input_path: str,
-    output_path: str,
-    resolve_taxonomies: bool = True,
-    **kwargs,
-) -> None:
-
-    bioindex: BiotropBioindex | None = None
-
-    try:
-        with open(input_path, "r") as f:
-            bioindex = BiotropBioindex.model_validate_json(f.read())
-    except Exception as e:
-        raise click.ClickException(f"Error parsing bioindex: {e}")
-
-    if bioindex is None:
-        raise click.ClickException("Failed to parse bioindex")
-
-    await convert_bioindex_to_tabular(
-        bioindex,
-        Path(output_path),
-        resolve_taxonomies,
-        **kwargs,
-    )
-
-
-@analysis_group.command("list")
-@click.argument(
-    "report_id",
-    required=False,
-    type=str,
-)
-@click.option(
-    "--connection-string",
-    type=str,
-    show_default=True,
-    show_envvar=True,
-    envvar="AGB_CONNECTION_STRING",
-    help="The connection string to the Agroportal API.",
-)
-@click.option(
-    "-t",
-    "--term",
-    type=str,
-    help="The term to search for in the analysis.",
-)
-@click.option(
-    "-sk",
-    "--skip",
-    type=int,
-    default=0,
-    show_default=True,
-    help="The number of records to skip.",
-)
-@click.option(
-    "-s",
-    "--size",
-    type=int,
-    default=25,
-    show_default=True,
-    help="The number of records to return.",
-)
-@click.option(
-    "--save-to-file",
-    type=click.Path(),
-    default=None,
-    show_default=True,
-    required=False,
-    help=(
-        "If provided, the analysis will be saved to a file. This option is only "
-        "available when the Biotrop Bioindex is provided."
+    click.option(
+        "--taxonomy-url",
+        type=str,
+        default=DEFAULT_TAXONOMY_URL,
+        show_default=True,
+        envvar="TAXONOMY_URL",
+        help=(
+            "The URL to the taxonomy service. This command should be used when "
+            "the `REPORT_ID` parameter is provided."
+        ),
     ),
-)
-@click.option(
-    "--stdout-json",
-    is_flag=True,
-    default=False,
-    show_default=True,
-    help="If true, the analysis will be printed to the console as JSON.",
-)
-@async_cmd
-async def list_analysis_cmd(
-    report_id: str | None = None,
-    **kwargs,
-) -> None:
-    analysis_list, biotrop_bioindex, response_status = await list_analysis(
-        report_id=report_id,
-        **kwargs,
-    )
+]
 
-    if response_status == 204:
-        raise click.ClickException("No analysis to show")
 
-    if analysis_list is None and biotrop_bioindex is None:
-        raise click.ClickException("Failed to list analysis")
-
-    if biotrop_bioindex is not None:
-        await __print_biotrop_bioindex(biotrop_bioindex, **kwargs)
-        return
-
-    __print_analysis_list(analysis_list, **kwargs)
+# ------------------------------------------------------------------------------
+# SUPPORT FUNCTIONS
+# ------------------------------------------------------------------------------
 
 
 async def __print_biotrop_bioindex(
@@ -277,6 +199,137 @@ def __print_analysis_list(analysis_list: AnalysisList, **kwargs) -> None:
     table.caption = f"Page {page + 1}/{total_pages}. Use -t to filter by term, -sk to skip records and -s to set the page size."
     table.caption_justify = "left"
     console.print(table)
+
+
+# ------------------------------------------------------------------------------
+# COMMANDS DEFINITIONS
+# ------------------------------------------------------------------------------
+
+
+@convert_group.command("bioindex-to-tabular")
+@click.argument(
+    "input_path",
+    required=1,
+    type=click.Path(exists=True),
+)
+@click.argument(
+    "output_path",
+    required=1,
+    type=click.Path(),
+)
+@__extend_options(__TAXONOMY_RELATED_OPTIONS)
+@__async_cmd
+async def convert_bioindex_to_tabular_cmd(
+    input_path: str,
+    output_path: str,
+    resolve_taxonomies: bool = True,
+    **kwargs,
+) -> None:
+
+    bioindex: BiotropBioindex | None = None
+
+    try:
+        with open(input_path, "r") as f:
+            bioindex = BiotropBioindex.model_validate_json(f.read())
+    except Exception as e:
+        raise click.ClickException(f"Error parsing bioindex: {e}")
+
+    if bioindex is None:
+        raise click.ClickException("Failed to parse bioindex")
+
+    await convert_bioindex_to_tabular(
+        bioindex,
+        Path(output_path),
+        resolve_taxonomies,
+        **kwargs,
+    )
+
+
+@analysis_group.command("list")
+@click.argument(
+    "report_id",
+    required=False,
+    type=str,
+)
+@click.option(
+    "--connection-string",
+    type=str,
+    show_default=True,
+    show_envvar=True,
+    envvar="AGB_CONNECTION_STRING",
+    help="The connection string to the Agroportal API.",
+)
+@click.option(
+    "-t",
+    "--term",
+    type=str,
+    help="The term to search for in the analysis.",
+)
+@click.option(
+    "-sk",
+    "--skip",
+    type=int,
+    default=0,
+    show_default=True,
+    help="The number of records to skip.",
+)
+@click.option(
+    "-s",
+    "--size",
+    type=int,
+    default=25,
+    show_default=True,
+    help="The number of records to return.",
+)
+@click.option(
+    "--save-to-file",
+    type=click.Path(),
+    default=None,
+    show_default=True,
+    required=False,
+    help=(
+        "If provided, the analysis will be saved to a file. This option is only "
+        "available when the Biotrop Bioindex is provided."
+    ),
+)
+@click.option(
+    "-j",
+    "--stdout-json",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help=(
+        "If true, the analysis will be printed to the console as JSON. This "
+        "command should be used when the `REPORT_ID` parameter is provided."
+    ),
+)
+@__extend_options(__TAXONOMY_RELATED_OPTIONS)
+@__async_cmd
+async def list_analysis_cmd(
+    report_id: str | None = None,
+    **kwargs,
+) -> None:
+    analysis_list, biotrop_bioindex, response_status = await list_analysis(
+        report_id=report_id,
+        **kwargs,
+    )
+
+    if response_status == 204:
+        raise click.ClickException("No analysis to show")
+
+    if analysis_list is None and biotrop_bioindex is None:
+        raise click.ClickException("Failed to list analysis")
+
+    if biotrop_bioindex is not None:
+        await __print_biotrop_bioindex(biotrop_bioindex, **kwargs)
+        return
+
+    __print_analysis_list(analysis_list, **kwargs)
+
+
+# ------------------------------------------------------------------------------
+# FIRE UP THE CLI IF THIS IS THE MAIN MODULE
+# ------------------------------------------------------------------------------
 
 
 if __name__ == "__main__":

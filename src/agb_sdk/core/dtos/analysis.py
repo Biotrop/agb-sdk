@@ -110,7 +110,6 @@ class Analysis(BaseModel):
     aggregation_set: Optional[Any] = None
     sample_statistics: Optional[Any] = None
     show_recommendation: bool
-    # metadata: Metadata
     children: Optional[List["Analysis"]] = None
     bioindex: Optional[BioindexIds] = None
 
