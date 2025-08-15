@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from functools import wraps
 from pathlib import Path
 from typing import Any
@@ -9,6 +10,10 @@ from agb_sdk.__version__ import version
 from agb_sdk.core.dtos import AnalysisList, BiotropBioindex
 from agb_sdk.core.use_cases import convert_bioindex_to_tabular, list_analysis
 from agb_sdk.settings import DEFAULT_TAXONOMY_URL
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
 
 # ------------------------------------------------------------------------------
 # AUXILIARY ELEMENTS
@@ -109,6 +114,22 @@ async def __print_biotrop_bioindex(
     output_path = kwargs.get("save_to_file")
     stdout_json = kwargs.get("stdout_json")
 
+    response = await convert_bioindex_to_tabular(
+        biotrop_bioindex,
+        output_path=Path(output_path) if output_path is not None else None,
+        resolve_taxonomies=kwargs.get("resolve_taxonomies"),
+        taxonomy_url=kwargs.get("taxonomy_url"),
+    )
+
+    if output_path is not None:
+        logger.info(f"Bioindex saved to {output_path}")
+        return
+
+    if response is None:
+        raise click.ClickException(
+            "An unexpected error occurred while generate output artifacts"
+        )
+
     (
         info_data_frame,
         by_sample_data_frame,
@@ -116,15 +137,7 @@ async def __print_biotrop_bioindex(
         by_process_data_frame,
         diversity_data_frame,
         community_composition_data_frame,
-    ) = await convert_bioindex_to_tabular(
-        biotrop_bioindex,
-        output_path=output_path,
-        resolve_taxonomies=kwargs.get("resolve_taxonomies"),
-        taxonomy_url=kwargs.get("taxonomy_url"),
-    )
-
-    if output_path is not None:
-        return
+    ) = response
 
     if stdout_json:
         from sys import stdout
@@ -148,12 +161,22 @@ async def __print_biotrop_bioindex(
 
     console = Console()
 
-    console.print(info_data_frame)
-    console.print(by_sample_data_frame)
-    console.print(by_dimension_data_frame)
-    console.print(by_process_data_frame)
-    console.print(diversity_data_frame)
-    console.print(community_composition_data_frame)
+    for name, print_index, database in [
+        ("Bioindex Information", True, info_data_frame),
+        ("Bioindex by Sample", False, by_sample_data_frame),
+        ("Bioindex by Dimension", False, by_dimension_data_frame),
+        ("Bioindex by Process", False, by_process_data_frame),
+        ("Diversity Descriptors", False, diversity_data_frame),
+        ("Community Composition", False, community_composition_data_frame),
+    ]:
+        table = Table(name)
+        table.add_row(
+            database.to_string(
+                float_format=lambda _: "{:.2f}".format(_),
+                index=print_index,
+            )
+        )
+        console.print(table)
 
 
 def __print_analysis_list(analysis_list: AnalysisList, **kwargs) -> None:

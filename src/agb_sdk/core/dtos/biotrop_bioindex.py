@@ -250,50 +250,78 @@ class BiotropBioindex(BaseModel):
     ) -> TaxonomyResponse | None:
         """Resolve a single taxonomy of the Biotrop Bioindex."""
 
+        max_attempts = 5
+        current_attempt = 0
+
         try:
-            async with ClientSession() as session:
-                async with session.get(
-                    f"{taxonomy_url or self.__default_taxonomy_url}/{taxid}",
-                    timeout=120,
-                ) as response:
-                    if response.status > 200 and response.status < 300:
-                        content_type = response.headers.get("Content-Type")
+            for attempt in range(max_attempts):
+                current_attempt = attempt + 1
 
-                        raw_records = await response.json(content_type=content_type)
+                if current_attempt > 1:
+                    logger.warning(
+                        f"Retrying to resolve taxonomy for {taxid} (attempt {current_attempt})"
+                    )
 
-                        records: list[BiotaxResponse] = [
-                            BiotaxResponse.model_validate(record)
-                            for record in raw_records
-                        ]
+                # Wait a bit before retrying
+                await sleep(2**attempt)
 
-                        target_record = list(
-                            filter(
-                                lambda record: record.name_class == "scientific name",
-                                records,
-                            ),
-                        )
+                async with ClientSession() as session:
+                    async with session.get(
+                        f"{taxonomy_url or self.__default_taxonomy_url}/{taxid}",
+                        timeout=120,
+                    ) as response:
+                        #
+                        # For successful requests try to collect the taxon
+                        # records and return a TaxonomyResponse object.
+                        #
+                        if response.status > 200 and response.status < 300:
+                            content_type = response.headers.get("Content-Type")
 
-                        if len(target_record) == 0:
+                            raw_records = await response.json(content_type=content_type)
+
+                            records: list[BiotaxResponse] = [
+                                BiotaxResponse.model_validate(record)
+                                for record in raw_records
+                            ]
+
+                            target_record = list(
+                                filter(
+                                    lambda record: record.name_class
+                                    == "scientific name",
+                                    records,
+                                ),
+                            )
+
+                            if len(target_record) == 0:
+                                logger.error(
+                                    f"No scientific name found for {taxid} in {records}"
+                                )
+
+                                return None
+
+                            target_record: BiotaxResponse = target_record.pop()
+
+                            return TaxonomyResponse(
+                                tax_id=target_record.tax_id,
+                                tax_name=target_record.tax_name,
+                                name_class=target_record.name_class,
+                                other_names=[record.tax_name for record in records],
+                            )
+
+                        #
+                        # If the request was not successful, wait a bit and try
+                        # again. If the maximum number of attempts is reached,
+                        # return None.
+                        #
+                        if attempt == max_attempts - 1:
                             logger.error(
-                                f"No scientific name found for {taxid} in {records}"
+                                f"Failed to resolve taxonomy for {taxid} after {max_attempts} attempts"
                             )
 
                             return None
 
-                        target_record: BiotaxResponse = target_record.pop()
-
-                        return TaxonomyResponse(
-                            tax_id=target_record.tax_id,
-                            tax_name=target_record.tax_name,
-                            name_class=target_record.name_class,
-                            other_names=[record.tax_name for record in records],
-                        )
-
-                    response = await response.text()
-
-                    raise ClientError(
-                        f"Failed to resolve taxonomy for {taxid}: {response}"
-                    )
+                        await sleep(2**attempt)
+                        continue
 
         except Exception as error:
             logger.error(f"Failed to resolve taxonomy for {taxid}: {error}")

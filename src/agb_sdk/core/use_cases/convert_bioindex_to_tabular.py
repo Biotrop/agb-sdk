@@ -56,10 +56,7 @@ async def convert_bioindex_to_tabular(
             }
         )
 
-    by_sample_data_frame = DataFrame.from_records(
-        by_sample_data,
-        index=["sample"],
-    )
+    by_sample_data_frame = DataFrame.from_records(by_sample_data)
 
     # --------------------------------------------------------------------------
     # 3. By dimension data
@@ -192,7 +189,7 @@ async def convert_bioindex_to_tabular(
             )
 
     community_composition_data_frame = DataFrame.from_records(
-        community_composition_data
+        community_composition_data,
     )
 
     # --------------------------------------------------------------------------
