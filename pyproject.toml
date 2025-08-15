@@ -1,6 +1,6 @@
 [project]
 name = "agrobiota-sdk"
-version = "0.1.0a8"
+version = "0.1.0a9"
 description = "An official SDK library for the AGROBIOTA environment"
 authors = [
     {name = "BIOTROP Bioinformatics Team",email = "bioinfo@biotrop.com.br"}

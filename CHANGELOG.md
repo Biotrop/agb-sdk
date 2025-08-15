@@ -1,3 +1,9 @@
+## v0.1.0a9 (2025-08-15)
+
+### Fix
+
+- solve the bioindex-to-tabular execution to allow to be executed without parameters
+
 ## v0.1.0a8 (2025-08-01)
 
 ## v0.1.0a7 (2025-08-01)
