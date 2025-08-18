@@ -3,7 +3,7 @@ from typing import Any
 
 from pandas import DataFrame, ExcelWriter
 
-from agb_sdk.core.dtos.biotrop_bioindex import BiotropBioindex
+from agb_sdk.core.dtos import BiotropBioindex, Locale, GGHDimension
 
 
 async def convert_bioindex_to_tabular(
@@ -95,46 +95,36 @@ async def convert_bioindex_to_tabular(
     # --------------------------------------------------------------------------
 
     for result in bioindex.results:
-        for process in result.by_dimension.biodiversity.by_process:
-            by_process_data.append(
-                {
+        for group, data in [
+            (
+                GGHDimension.Biodiversity,
+                result.by_dimension.biodiversity.by_process,
+            ),
+            (
+                GGHDimension.BiologicalAgents,
+                result.by_dimension.biological_agents.by_process,
+            ),
+            (
+                GGHDimension.BiologicalFertility,
+                result.by_dimension.biological_fertility.by_process,
+            ),
+            (
+                GGHDimension.PhytosanitaryRisk,
+                result.by_dimension.phytosanitary_risk.by_process,
+            ),
+        ]:
+            for process in data:
+                process_data = {
                     "sample": result.sample,
-                    "dimension": "biodiversity",
+                    "dimension": group.value,
                     "process": process.process,
                     "ggh": process.ggh,
                 }
-            )
 
-        for process in result.by_dimension.biological_agents.by_process:
-            by_process_data.append(
-                {
-                    "sample": result.sample,
-                    "dimension": "biological_agents",
-                    "process": process.process,
-                    "ggh": process.ggh,
-                }
-            )
+                if hasattr(process, "group"):
+                    process_data.update({"group": process.group})
 
-        for process in result.by_dimension.biological_fertility.by_process:
-            by_process_data.append(
-                {
-                    "sample": result.sample,
-                    "dimension": "biological_fertility",
-                    "group": process.group,
-                    "process": process.process,
-                    "ggh": process.ggh,
-                }
-            )
-
-        for process in result.by_dimension.phytosanitary_risk.by_process:
-            by_process_data.append(
-                {
-                    "sample": result.sample,
-                    "dimension": "phytosanitary_risk",
-                    "process": process.process,
-                    "ggh": process.ggh,
-                }
-            )
+                by_process_data.append(process_data)
 
     by_process_dataframe = DataFrame.from_records(by_process_data)
 
@@ -226,3 +216,29 @@ async def convert_bioindex_to_tabular(
         diversity_dataframe,
         community_composition_dataframe,
     )
+
+
+def __translate_key(
+    model_config: dict[str, Any],
+    key: str,
+    locale: Locale | None = None,
+    default_key: str | None = None,
+) -> str:
+    """Translate a key using the provided translations dictionary."""
+
+    if locale is None:
+        return default_key or key
+
+    if (translations := model_config.get("_translations")) is None:
+        return default_key or key
+
+    if not isinstance(translations, dict):
+        return default_key or key
+
+    if (locale_translations := translations.get(locale.value)) is None:
+        return default_key or key
+
+    if isinstance(locale_translations, dict):
+        return locale_translations.get(key, default_key or key)
+
+    return default_key or key

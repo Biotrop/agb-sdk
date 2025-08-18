@@ -10,7 +10,7 @@ from uuid import UUID
 import rich_click as click
 
 from agb_sdk.__version__ import version
-from agb_sdk.core.dtos import AnalysisList, BiotropBioindex
+from agb_sdk.core.dtos import AnalysisList, BiotropBioindex, Locale
 from agb_sdk.core.use_cases import (
     get_bioindex_by_id,
     list_analysis,
@@ -113,9 +113,9 @@ def analysis_group():
 
 __TAXONOMY_RELATED_OPTIONS = [
     click.option(
-        "--resolve-taxonomies",
+        "--not-resolve-taxonomies",
         is_flag=True,
-        default=True,
+        default=False,
         show_default=True,
         help=(
             "If true, the taxonomies will be resolved from the taxonomy "
@@ -146,6 +146,7 @@ async def __print_biotrop_bioindex(
     biotrop_bioindex: BiotropBioindex,
     output_format: OutputFormat = OutputFormat.TABULAR,
     save_to_file: str | None = None,
+    locale: Locale | None = None,
     **kwargs,
 ) -> None:
     try:
@@ -156,6 +157,12 @@ async def __print_biotrop_bioindex(
             f"Supported formats are: {[e.value for e in OutputFormat]}"
         )
 
+    if locale is not None:
+        try:
+            locale = Locale(locale)
+        except ValueError:
+            logger.warning(f"Invalid locale ({locale}), default value used")
+
     # --------------------------------------------------------------------------
     # If the desired output format is JSON_RAW and no file is specified,
     # we print the raw JSON to stdout.
@@ -163,6 +170,9 @@ async def __print_biotrop_bioindex(
     if output_format == OutputFormat.JSON_RAW and save_to_file is None:
         from json import dumps
         from sys import stdout
+
+        if locale is not None:
+            biotrop_bioindex.set_locale(locale)
 
         stdout.write(dumps(biotrop_bioindex.model_dump(), indent=4))
         return
@@ -190,7 +200,7 @@ async def __print_biotrop_bioindex(
     response = await convert_bioindex_to_tabular(
         biotrop_bioindex,
         output_path=(Path(save_to_file) if implicit_save_to_file else None),
-        resolve_taxonomies=kwargs.get("resolve_taxonomies"),
+        resolve_taxonomies=not kwargs.get("not_resolve_taxonomies"),
         taxonomy_url=kwargs.get("taxonomy_url"),
     )
 
@@ -414,6 +424,18 @@ async def convert_bioindex_to_tabular_cmd(
         "If provided, the analysis will be saved to a file. This option is only "
         "available when the Biotrop Bioindex is provided."
     ),
+)
+@click.option(
+    "-l",
+    "--locale",
+    type=click.Choice(
+        [Locale.PT_BR.value],
+        case_sensitive=False,
+    ),
+    default=None,
+    required=False,
+    show_default=True,
+    help="The locale to use for translations.",
 )
 @click.option(
     "-f",

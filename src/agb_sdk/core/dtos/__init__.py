@@ -1,4 +1,4 @@
-from .analysis import Analysis, AnalysisList, Customer, CustomerId, CustomerRecord
+from .analysis import Analysis, AnalysisList, ChildRecord, ChildID, CustomerRecord
 from .locale import Locale
 from .biotax_response import BiotaxResponse, TaxonomyResponse
 from .biotrop_bioindex import BiotropBioindex
@@ -11,8 +11,8 @@ __all__ = [
     "GGHDimension",
     "Analysis",
     "AnalysisList",
-    "Customer",
-    "CustomerId",
+    "ChildRecord",
+    "ChildID",
     "CustomerRecord",
     "Locale",
 ]

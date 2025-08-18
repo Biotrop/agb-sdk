@@ -3,59 +3,152 @@ from asyncio import gather, sleep
 from typing import Any, Self
 
 from aiohttp import ClientSession
-from aiohttp.client_exceptions import ClientError
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_serializer
 from pydantic.alias_generators import to_camel
 
 from agb_sdk.core.dtos import BiotaxResponse, TaxonomyResponse
 from agb_sdk.settings import DEFAULT_TAXONOMY_URL
 
+from .locale import Locale
+from .mixin import SerializerMixin
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-class ByProcess(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
-
-    process: str
-    ggh: float
-
-
-class ByProcessWithGroup(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+class ByProcess(SerializerMixin, BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=to_camel,
+        _translations={
+            Locale.PT_BR.value: {
+                "process": "Processo",
+                "ggh": "GGHDoProcesso",
+                "group": "Grupo",
+            },
+        },
+    )
 
     process: str
     ggh: float
     group: str | None = None
 
+    def set_locale(self, locale: Locale | None) -> None:
+        """Set the locale for translations."""
 
-class Dimension(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+        super()._set_locale(locale)
+
+    @model_serializer
+    def translate_model(self) -> dict[str, Any]:
+        return self._field_serializer(dict(self), self.model_config)
+
+
+class ByProcessWithGroup(SerializerMixin, BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=to_camel,
+        _translations={
+            Locale.PT_BR.value: {
+                "process": "Processo",
+                "ggh": "GGHDoProcesso",
+                "group": "Grupo",
+            },
+        },
+    )
+
+    process: str
+    ggh: float
+    group: str | None = None
+
+    def set_locale(self, locale: Locale | None) -> None:
+        """Set the locale for translations."""
+
+        super()._set_locale(locale)
+
+    @model_serializer
+    def translate_model(self) -> dict[str, Any]:
+        return self._field_serializer(dict(self), self.model_config)
+
+
+class Dimension(SerializerMixin, BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=to_camel,
+        _translations={
+            Locale.PT_BR.value: {
+                "ggh": "GGHDaDimensao",
+                "by_process": "ResultadoPorProcesso",
+            },
+        },
+    )
 
     ggh: float
     by_process: list[ByProcess]
 
+    def set_locale(self, locale: Locale | None) -> None:
+        """Set the locale for translations."""
 
-class BiologicalFertilityDimension(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+        super()._set_locale(locale)
 
-    ggh: float
-    by_process: list[ByProcessWithGroup]
+        for process in self.by_process:
+            process.set_locale(locale)
+
+    @model_serializer
+    def translate_model(self) -> dict[str, Any]:
+        return self._field_serializer(dict(self), self.model_config)
 
 
-class ByDimension(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+class ByDimension(SerializerMixin, BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=to_camel,
+        _translations={
+            Locale.PT_BR.value: {
+                "biodiversity": "ResilienciaBioligica",
+                "biological_agents": "AgentesBiologicos",
+                "biological_fertility": "FertilidadeBiologica",
+                "phytosanitary_risk": "RiscoFitossanitario",
+            },
+        },
+    )
 
     biodiversity: Dimension
     biological_agents: Dimension
-    biological_fertility: BiologicalFertilityDimension
+    biological_fertility: Dimension
     phytosanitary_risk: Dimension
 
+    def set_locale(self, locale: Locale | None) -> None:
+        """Set the locale for translations."""
 
-class CommunityComposition(BaseModel):
+        super()._set_locale(locale)
+
+        self.biodiversity.set_locale(locale)
+        self.biological_agents.set_locale(locale)
+        self.biological_fertility.set_locale(locale)
+        self.phytosanitary_risk.set_locale(locale)
+
+    @model_serializer
+    def translate_model(self) -> dict[str, Any]:
+        return self._field_serializer(dict(self), self.model_config)
+
+
+class CommunityComposition(SerializerMixin, BaseModel):
     """The community composition of the sample"""
 
-    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=to_camel,
+        _translations={
+            Locale.PT_BR.value: {
+                "key": "Chave",
+                "key_type": "TipoDeChave",
+                "count": "Contagem",
+                "is_pathogenic": "Patogenico",
+                "taxon": "Taxon",
+                "alternative_names": "NomesAlternativos",
+            },
+        },
+    )
 
     key: str
     """The Tax ID of the taxon"""
@@ -75,53 +168,186 @@ class CommunityComposition(BaseModel):
     alternative_names: list[str] | None = None
     """The alternative names of the taxon"""
 
+    def set_locale(self, locale: Locale | None) -> None:
+        """Set the locale for translations."""
 
-class TaxonStatistics(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+        super()._set_locale(locale)
+
+    @model_serializer
+    def translate_model(self) -> dict[str, Any]:
+        return self._field_serializer(dict(self), self.model_config)
+
+
+class TaxonStatistics(SerializerMixin, BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=to_camel,
+        _translations={
+            Locale.PT_BR.value: {
+                "value": "Valor",
+                "inverse_confidence": "ConfiancaInversa",
+            },
+        },
+    )
 
     value: float
     inverse_confidence: float
 
+    def set_locale(self, locale: Locale | None) -> None:
+        """Set the locale for translations."""
 
-class ByTaxonomy(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+        super()._set_locale(locale)
+
+    @model_serializer
+    def translate_model(self) -> dict[str, Any]:
+        return self._field_serializer(dict(self), self.model_config)
+
+
+class ByTaxonomy(SerializerMixin, BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=to_camel,
+        _translations={
+            Locale.PT_BR.value: {
+                "fungi": "Fungi",
+                "bacteria": "Bacterias",
+            },
+        },
+    )
 
     fungi: TaxonStatistics | None = None
     bacteria: TaxonStatistics | None = None
 
+    def set_locale(self, locale: Locale | None) -> None:
+        """Set the locale for translations."""
 
-class Statistics(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+        super()._set_locale(locale)
+
+        if self.fungi:
+            self.fungi.set_locale(locale)
+
+        if self.bacteria:
+            self.bacteria.set_locale(locale)
+
+    @model_serializer
+    def translate_model(self) -> dict[str, Any]:
+        return self._field_serializer(dict(self), self.model_config)
+
+
+class Statistics(SerializerMixin, BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=to_camel,
+        _translations={
+            Locale.PT_BR.value: {
+                "faith_pd": "FaithPD",
+                "shannon": "Shannon",
+                "richness": "Riqueza",
+            },
+        },
+    )
 
     faith_pd: ByTaxonomy
     shannon: ByTaxonomy
     richness: ByTaxonomy
 
+    def set_locale(self, locale: Locale | None) -> None:
+        """Set the locale for translations."""
 
-class Diversity(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+        super()._set_locale(locale)
+
+        self.faith_pd.set_locale(locale)
+        self.shannon.set_locale(locale)
+        self.richness.set_locale(locale)
+
+    @model_serializer
+    def translate_model(self) -> dict[str, Any]:
+        return self._field_serializer(dict(self), self.model_config)
+
+
+class Diversity(SerializerMixin, BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=to_camel,
+        _translations={
+            Locale.PT_BR.value: {
+                "statistics": "EstatisticasDeDiversidade",
+                "community_composition": "ComposicaoDaComunidadeMicrobiana",
+            },
+        },
+    )
 
     statistics: Statistics
     community_composition: list[CommunityComposition]
 
+    def set_locale(self, locale: Locale | None) -> None:
+        """Set the locale for translations."""
 
-class Result(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+        super()._set_locale(locale)
+
+        self.statistics.set_locale(locale)
+
+        for composition in self.community_composition:
+            composition.set_locale(locale)
+
+    @model_serializer
+    def translate_model(self) -> dict[str, Any]:
+        return self._field_serializer(dict(self), self.model_config)
+
+
+class Result(SerializerMixin, BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=to_camel,
+        _translations={
+            Locale.PT_BR.value: {
+                "sample": "Amostra",
+                "ggh": "GGHDaAmostra",
+                "diversity": "Diversidade",
+                "by_dimension": "ResultadosPorDimensao",
+                "dimension": "Dimensao",
+            },
+        },
+    )
 
     sample: str
     ggh: float
     diversity: Diversity
     by_dimension: ByDimension
 
+    def set_locale(self, locale: Locale | None) -> None:
+        """Set the locale for translations."""
 
-class BiotropBioindex(BaseModel):
+        super()._set_locale(locale)
+
+        self.diversity.set_locale(locale)
+        self.by_dimension.set_locale(locale)
+
+    @model_serializer
+    def translate_model(self) -> dict[str, Any]:
+        return self._field_serializer(dict(self), self.model_config)
+
+
+class BiotropBioindex(SerializerMixin, BaseModel):
     """The Biotrop Bioindex
 
     Using this class, you can deserialize the Biotrop Bioindex from the JSON
     response, derived from the Agrobiota Customer's API.
     """
 
-    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=to_camel,
+        _translations={
+            Locale.PT_BR.value: {
+                "id": "ID",
+                "hash": "Hash",
+                "version": "Versao",
+                "updated_at": "AtualizadoEm",
+                "results": "ResultadosPorAmostra",
+            },
+        },
+    )
 
     id: str
     """The ID of the Biotrop Bioindex record"""
@@ -147,6 +373,18 @@ class BiotropBioindex(BaseModel):
     functional annotation itself. Each result contains the biodiversity,
     biological agents, biological fertility, and phytosanitary risk dimensions.
     """
+
+    def set_locale(self, locale: Locale | None) -> None:
+        """Set the locale for translations."""
+
+        super()._set_locale(locale)
+
+        for result in self.results:
+            result.set_locale(locale)
+
+    @model_serializer
+    def translate_model(self) -> dict[str, Any]:
+        return self._field_serializer(dict(self), self.model_config)
 
     # --------------------------------------------------------------------------
     # PRIVATE PROPERTIES

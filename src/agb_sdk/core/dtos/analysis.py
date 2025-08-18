@@ -1,41 +1,29 @@
 import logging
-from typing import Any, List, Optional, Union
+from typing import Any, Generic, List, Optional, TypeVar, Union
 
-from pydantic import (
-    BaseModel,
-    ConfigDict,
-    FieldSerializationInfo,
-    field_serializer,
-    model_serializer,
-)
+from pydantic import BaseModel, ConfigDict, model_serializer
 from pydantic.alias_generators import to_camel
 
 from .locale import Locale
+from .mixin import SerializerMixin
 
 logger = logging.getLogger(__name__)
 
-
-TRANSLATIONS = {
-    Locale.EN_US.value: {
-        "short_name": "name",
-        "full_name": "full_name",
-        "description": "description",
-        "results_set": "results_set",
-    },
-    Locale.EN_US.value: {
-        "short_name": "nome",
-        "full_name": "nome_completo",
-        "description": "descrição",
-        "results_set": "conjunto_de_resultados",
-    },
-}
+T = TypeVar("T", bound=BaseModel)
 
 
-class CustomerRecord(BaseModel):
+class CustomerRecord(SerializerMixin, BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
         alias_generator=to_camel,
-        _locale=None,
+        _translations={
+            Locale.PT_BR.value: {
+                "id": "ID",
+                "short_name": "Nome",
+                "full_name": "NomeCompleto",
+                "description": "Descricao",
+            },
+        },
     )
 
     id: str
@@ -46,105 +34,232 @@ class CustomerRecord(BaseModel):
     def set_locale(self, locale: Locale | None) -> None:
         """Set the locale for translations."""
 
-        if locale is not None:
-            self.model_config.update(
-                {
-                    "_locale": locale,
-                }
-            )
+        super()._set_locale(locale)
 
     @model_serializer
     def translate_model(self) -> dict[str, Any]:
-        if (locale := self.model_config.get("locale")) is None:
-            return self
-
-        translations = TRANSLATIONS.get(locale, {})
-
-        translated_data = {
-            key: translations.get(key, value)
-            for key, value in self.model_dump().items()
-        }
-
-        return translated_data
+        return self._field_serializer(dict(self), self.model_config)
 
 
-class Customer(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+class ChildRecord(SerializerMixin, BaseModel, Generic[T]):
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=to_camel,
+        _translations={
+            Locale.PT_BR.value: {
+                "record": "Registro",
+            },
+        },
+    )
 
-    record: CustomerRecord
+    record: T
+
+    def set_locale(self, locale: Locale | None) -> None:
+        """Set the locale for translations."""
+
+        super()._set_locale(locale)
+
+        if isinstance(self.record, SerializerMixin):
+            self.record.set_locale(locale)
+
+    @model_serializer
+    def translate_model(self) -> dict[str, Any]:
+        return self._field_serializer(dict(self), self.model_config)
 
 
-class CustomerId(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+class ChildID(SerializerMixin, BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=to_camel,
+        _translations={
+            Locale.PT_BR.value: {
+                "id": "ID",
+            },
+        },
+    )
 
     id: str
 
+    def set_locale(self, locale: Locale | None) -> None:
+        """Set the locale for translations."""
 
-class ParentId(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+        super()._set_locale(locale)
 
-    id: str
+    @model_serializer
+    def translate_model(self) -> dict[str, Any]:
+        return self._field_serializer(dict(self), self.model_config)
 
 
-class BioindexIds(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+class ChildrenIDs(SerializerMixin, BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=to_camel,
+        _translations={
+            Locale.PT_BR.value: {
+                "ids": "IDs",
+            },
+        },
+    )
 
     ids: List[str]
 
+    def set_locale(self, locale: Locale | None) -> None:
+        """Set the locale for translations."""
 
-class Tag(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+        super()._set_locale(locale)
+
+    @model_serializer
+    def translate_model(self) -> dict[str, Any]:
+        return self._field_serializer(dict(self), self.model_config)
+
+
+class Tag(SerializerMixin, BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=to_camel,
+        _translations={
+            Locale.PT_BR.value: {
+                "id": "ID",
+                "value": "Valor",
+                "meta": "Metadados",
+            },
+        },
+    )
 
     id: str
     value: str
     meta: Any
 
+    def set_locale(self, locale: Locale | None) -> None:
+        """Set the locale for translations."""
 
-class ResultSet(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+        super()._set_locale(locale)
+
+        if isinstance(self.meta, SerializerMixin):
+            self.meta.set_locale(locale)
+
+    @model_serializer
+    def translate_model(self) -> dict[str, Any]:
+        return self._field_serializer(dict(self), self.model_config)
+
+
+class Artifact(SerializerMixin, BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=to_camel,
+        _translations={
+            Locale.PT_BR.value: {
+                "id": "ID",
+                "result_set": "IdentificadoresDosResultados",
+                "name": "Nome",
+                "url": "URL",
+                "artifact_type": "TipoDeArtefato",
+                "public_object": "ObjetoPublico",
+                "updated_at": "AtualizadoEm",
+            },
+        },
+    )
 
     id: str
-
-
-class Artifact(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
-
-    id: str
-    result_set: ResultSet
+    result_set: ChildID
     name: str
     url: str
     artifact_type: str
     public_object: bool
     updated_at: str
 
+    def set_locale(self, locale: Locale | None) -> None:
+        """Set the locale for translations."""
 
-class Group(BaseModel):
+        super()._set_locale(locale)
+
+        self.result_set.set_locale(locale)
+
+    @model_serializer
+    def translate_model(self) -> dict[str, Any]:
+        return self._field_serializer(dict(self), self.model_config)
+
+
+class Group(SerializerMixin, BaseModel):
     model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
 
-    # Empty interface in TypeScript, keeping as empty for now
-    pass
+    def set_locale(self, locale: Locale | None) -> None:
+        """Set the locale for translations."""
+
+        super()._set_locale(locale)
 
 
-class Sample(BaseModel):
+class Sample(SerializerMixin, BaseModel):
     model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
 
-    # Empty interface in TypeScript, keeping as empty for now
-    pass
+    def set_locale(self, locale: Locale | None) -> None:
+        """Set the locale for translations."""
+
+        super()._set_locale(locale)
 
 
-class Metadata(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+class Metadata(SerializerMixin, BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=to_camel,
+        _translations={
+            Locale.PT_BR.value: {
+                "group": "Grupo",
+                "sample": "Amostra",
+            },
+        },
+    )
 
     group: Group
     sample: Sample
 
+    def set_locale(self, locale: Locale | None) -> None:
+        """Set the locale for translations."""
 
-class Analysis(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+        super()._set_locale(locale)
 
-    customer: Union[Customer, CustomerId]
+        self.group._set_locale(locale)
+        self.sample._set_locale(locale)
+
+    @model_serializer
+    def translate_model(self) -> dict[str, Any]:
+        return self._field_serializer(dict(self), self.model_config)
+
+
+class Analysis(SerializerMixin, BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=to_camel,
+        _translations={
+            Locale.PT_BR.value: {
+                "id": "ID",
+                "customer": "Cliente",
+                "parent": "ResultadoPai",
+                "result_type": "TipoDeResultado",
+                "name": "Nome",
+                "tags": "Etiquetas",
+                "hash": "Hash",
+                "version": "Versao",
+                "updated_at": "AtualizadoEm",
+                "collection_date": "DataDeColeta",
+                "crop": "Cultura",
+                "taxa": "Taxa",
+                "was_frozen": "FoiCongelado",
+                "was_approved": "FoiAprovado",
+                "was_evaluated": "FoiAvaliado",
+                "was_rejected": "FoiRejeitado",
+                "upload_completed": "UploadConcluido",
+                "verbose_status": "StatusDetalhado",
+                "artifacts": "Artefatos",
+                "children": "ResultadosFilhos",
+                "bioindex": "Bioindices",
+            },
+        },
+    )
+
+    customer: Union[ChildRecord[CustomerRecord], ChildID]
     id: str
-    parent: Union[ParentId, Any]
+    parent: Union[ChildID, Any]
     result_type: str
     name: str
     tags: Optional[List[Tag]] = None
@@ -161,11 +276,8 @@ class Analysis(BaseModel):
     upload_completed: bool
     verbose_status: str
     artifacts: Optional[List[Artifact]] = None
-    aggregation_set: Optional[Any] = None
-    sample_statistics: Optional[Any] = None
-    show_recommendation: bool
     children: Optional[List["Analysis"]] = None
-    bioindex: Optional[BioindexIds] = None
+    bioindex: Optional[ChildrenIDs] = None
 
     def list_bioindex_ids(self) -> List[str]:
         """List the bioindex IDs."""
@@ -181,11 +293,66 @@ class Analysis(BaseModel):
 
         return bioindex_ids
 
+    def set_locale(self, locale: Locale | None) -> None:
+        """Set the locale for translations."""
 
-class AnalysisList(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+        super()._set_locale(locale)
+
+        if self.customer:
+            if isinstance(self.customer, ChildRecord[CustomerRecord]):
+                self.customer.set_locale(locale)
+
+            elif isinstance(self.customer, ChildID):
+                self.customer.set_locale(locale)
+
+        if self.tags:
+            for tag in self.tags:
+                tag.set_locale(locale)
+
+        if self.artifacts:
+            for artifact in self.artifacts:
+                artifact.set_locale(locale)
+
+        if self.children:
+            for child in self.children:
+                child.set_locale(locale)
+
+        if self.bioindex:
+            self.bioindex.set_locale(locale)
+
+    @model_serializer
+    def translate_model(self) -> dict[str, Any]:
+        return self._field_serializer(dict(self), self.model_config)
+
+
+class AnalysisList(SerializerMixin, BaseModel):
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=to_camel,
+        _translations={
+            Locale.PT_BR.value: {
+                "count": "Total",
+                "skip": "ResultadosIgnorados",
+                "size": "TamanhoDaPagina",
+                "records": "Registros",
+            },
+        },
+    )
 
     count: int
     skip: int
     size: int
     records: List[Analysis]
+
+    def set_locale(self, locale: Locale | None) -> None:
+        """Set the locale for translations."""
+
+        super()._set_locale(locale)
+
+        if self.records:
+            for record in self.records:
+                record.set_locale(locale)
+
+    @model_serializer
+    def translate_model(self) -> dict[str, Any]:
+        return self._field_serializer(dict(self), self.model_config)

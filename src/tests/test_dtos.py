@@ -23,6 +23,8 @@ def sample_bioindex_data():
     assert bioindex is not None
     assert isinstance(bioindex, BiotropBioindex)
 
+    bioindex.set_locale(locale=Locale.PT_BR)
+
     return bioindex
 
 
@@ -57,6 +59,8 @@ def test_stability_on_deserialization_of_biotrop_bioindex(
     assert len(sample_bioindex_data.results[0].diversity.community_composition) == 34
     assert len(sample_bioindex_data.results[1].diversity.community_composition) == 24
 
+    print(sample_bioindex_data.model_dump())
+
 
 async def test_resolve_taxonomy_of_biotrop_bioindex(
     sample_bioindex_data: BiotropBioindex,
@@ -82,5 +86,4 @@ async def test_customer_record_deserialization(
 ) -> None:
     logger.info("Testing CustomerRecord")
 
-    sample_customer_record_data.set_locale(locale=Locale)
-    print(sample_customer_record_data.model_dump())
+    sample_customer_record_data._set_locale(locale=Locale.PT_BR)
