@@ -1,3 +1,10 @@
+## v0.1.0a10 (2025-08-18)
+
+### Feat
+
+- **locale**: implements locale to translate keys of the json results exported from results
+- upgrade the anslysis fetching cli option to include raw formats on saving
+
 ## v0.1.0a9 (2025-08-15)
 
 ### Fix

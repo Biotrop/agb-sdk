@@ -1,5 +1,5 @@
 [tool.commitizen]
-version = "0.1.0a9"
+version = "0.1.0a10"
 version_files = ["src/agb_sdk/__version__.py", "pyproject.toml"]
 name = "cz_conventional_commits"
 tag_format = "v$version"
