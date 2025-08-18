@@ -1,17 +1,71 @@
-from typing import Any, List, Optional, Self, Union
+import logging
+from typing import Any, List, Optional, Union
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    FieldSerializationInfo,
+    field_serializer,
+    model_serializer,
+)
 from pydantic.alias_generators import to_camel
+
+from .locale import Locale
+
+logger = logging.getLogger(__name__)
+
+
+TRANSLATIONS = {
+    Locale.EN_US.value: {
+        "short_name": "name",
+        "full_name": "full_name",
+        "description": "description",
+        "results_set": "results_set",
+    },
+    Locale.EN_US.value: {
+        "short_name": "nome",
+        "full_name": "nome_completo",
+        "description": "descrição",
+        "results_set": "conjunto_de_resultados",
+    },
+}
 
 
 class CustomerRecord(BaseModel):
-    model_config = ConfigDict(populate_by_name=True, alias_generator=to_camel)
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=to_camel,
+        _locale=None,
+    )
 
     id: str
     short_name: str
-    full_name: Optional[Any] = None
-    description: Optional[Any] = None
-    results_set: Optional[Any] = None
+    full_name: Optional[str | None] = None
+    description: Optional[str | None] = None
+
+    def set_locale(self, locale: Locale | None) -> None:
+        """Set the locale for translations."""
+
+        if locale is not None:
+            self.model_config.update(
+                {
+                    "_locale": locale,
+                }
+            )
+
+    @model_serializer
+    def translate_model(self) -> dict[str, Any]:
+        if (locale := self.model_config.get("locale")) is None:
+            return self
+
+        translations = TRANSLATIONS.get(locale, {})
+
+        translated_data = {
+            key: translations.get(key, value)
+            for key, value in self.model_dump().items()
+        }
+
+        return translated_data
 
 
 class Customer(BaseModel):

@@ -2,14 +2,14 @@ import logging
 
 import pytest
 
-from agb_sdk.core.dtos import BiotropBioindex
+from agb_sdk.core.dtos import BiotropBioindex, CustomerRecord, Locale
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
 @pytest.fixture
-def sample_data():
+def sample_bioindex_data():
     raw_data = None
 
     with open("src/tests/mock/expected-bioidnex-data.jsonc", "r") as file:
@@ -26,24 +26,42 @@ def sample_data():
     return bioindex
 
 
+@pytest.fixture
+def sample_customer_record_data():
+    raw_data = None
+
+    with open("src/tests/mock/customer-record.jsonc", "r") as file:
+        raw_data = file.read()
+
+    assert raw_data is not None
+    assert isinstance(raw_data, str)
+
+    customer_record = CustomerRecord.model_validate_json(raw_data)
+
+    assert customer_record is not None
+    assert isinstance(customer_record, CustomerRecord)
+
+    return customer_record
+
+
 def test_stability_on_deserialization_of_biotrop_bioindex(
-    sample_data: BiotropBioindex,
+    sample_bioindex_data: BiotropBioindex,
 ) -> None:
     logger.info("Testing BiotropBioindex")
 
-    assert sample_data.id == "4c3ed2bf-8cda-41c8-b168-2a4cfecga74c"
-    assert sample_data.hash == "00000000000000000000000000000000"
-    assert sample_data.version == 1
-    assert sample_data.updated_at == "2021-05-27 00:01:48.651 +00:00"
-    assert len(sample_data.results) == 2
-    assert len(sample_data.results[0].diversity.community_composition) == 34
-    assert len(sample_data.results[1].diversity.community_composition) == 24
+    assert sample_bioindex_data.id == "4c3ed2bf-8cda-41c8-b168-2a4cfecga74c"
+    assert sample_bioindex_data.hash == "00000000000000000000000000000000"
+    assert sample_bioindex_data.version == 1
+    assert sample_bioindex_data.updated_at == "2021-05-27 00:01:48.651 +00:00"
+    assert len(sample_bioindex_data.results) == 2
+    assert len(sample_bioindex_data.results[0].diversity.community_composition) == 34
+    assert len(sample_bioindex_data.results[1].diversity.community_composition) == 24
 
 
 async def test_resolve_taxonomy_of_biotrop_bioindex(
-    sample_data: BiotropBioindex,
+    sample_bioindex_data: BiotropBioindex,
 ) -> None:
-    result = await sample_data.resolve_taxonomies()
+    result = await sample_bioindex_data.resolve_taxonomies()
 
     assert result is not None
     assert isinstance(result, BiotropBioindex)
@@ -57,3 +75,12 @@ async def test_resolve_taxonomy_of_biotrop_bioindex(
 
     for taxon in ["Burkholderia", "Kocuria"]:
         assert taxon in expected_taxons
+
+
+async def test_customer_record_deserialization(
+    sample_customer_record_data: CustomerRecord,
+) -> None:
+    logger.info("Testing CustomerRecord")
+
+    sample_customer_record_data.set_locale(locale=Locale)
+    print(sample_customer_record_data.model_dump())

@@ -31,7 +31,7 @@ async def convert_bioindex_to_tabular(
     # 1. Summary data
     # --------------------------------------------------------------------------
 
-    frame = DataFrame.from_records(
+    info_dataframe = DataFrame.from_records(
         [
             {
                 "id": bioindex.id,
@@ -42,7 +42,7 @@ async def convert_bioindex_to_tabular(
         ],
     ).transpose()
 
-    frame.columns = ["info"]
+    info_dataframe.columns = ["info"]
 
     # --------------------------------------------------------------------------
     # 2. By sample data
@@ -56,7 +56,7 @@ async def convert_bioindex_to_tabular(
             }
         )
 
-    by_sample_data_frame = DataFrame.from_records(by_sample_data)
+    by_sample_dataframe = DataFrame.from_records(by_sample_data)
 
     # --------------------------------------------------------------------------
     # 3. By dimension data
@@ -88,7 +88,7 @@ async def convert_bioindex_to_tabular(
             ]
         )
 
-    by_dimension_data_frame = DataFrame.from_records(by_dimension_data)
+    by_dimension_dataframe = DataFrame.from_records(by_dimension_data)
 
     # --------------------------------------------------------------------------
     # 4. By process data
@@ -136,7 +136,7 @@ async def convert_bioindex_to_tabular(
                 }
             )
 
-    by_process_data_frame = DataFrame.from_records(by_process_data)
+    by_process_dataframe = DataFrame.from_records(by_process_data)
 
     # --------------------------------------------------------------------------
     # 5. Diversity data
@@ -168,7 +168,7 @@ async def convert_bioindex_to_tabular(
             ]
         )
 
-    diversity_data_frame = DataFrame.from_records(diversity_data)
+    diversity_dataframe = DataFrame.from_records(diversity_data)
 
     # --------------------------------------------------------------------------
     # 6. Community composition data
@@ -188,7 +188,7 @@ async def convert_bioindex_to_tabular(
                 ]
             )
 
-    community_composition_data_frame = DataFrame.from_records(
+    community_composition_dataframe = DataFrame.from_records(
         community_composition_data,
     )
 
@@ -203,12 +203,12 @@ async def convert_bioindex_to_tabular(
         output_path = output_path.with_suffix(".xlsx")
 
         with ExcelWriter(output_path, mode="w") as writer:
-            frame.to_excel(writer, sheet_name="summary")
-            by_sample_data_frame.to_excel(writer, sheet_name="by_sample")
-            by_dimension_data_frame.to_excel(writer, sheet_name="by_dimension")
-            by_process_data_frame.to_excel(writer, sheet_name="by_process")
-            diversity_data_frame.to_excel(writer, sheet_name="diversity")
-            community_composition_data_frame.to_excel(
+            info_dataframe.to_excel(writer, sheet_name="summary")
+            by_sample_dataframe.to_excel(writer, sheet_name="by_sample")
+            by_dimension_dataframe.to_excel(writer, sheet_name="by_dimension")
+            by_process_dataframe.to_excel(writer, sheet_name="by_process")
+            diversity_dataframe.to_excel(writer, sheet_name="diversity")
+            community_composition_dataframe.to_excel(
                 writer, sheet_name="community_composition"
             )
 
@@ -219,10 +219,10 @@ async def convert_bioindex_to_tabular(
     # --------------------------------------------------------------------------
 
     return (
-        frame,
-        by_sample_data_frame,
-        by_dimension_data_frame,
-        by_process_data_frame,
-        diversity_data_frame,
-        community_composition_data_frame,
+        info_dataframe,
+        by_sample_dataframe,
+        by_dimension_dataframe,
+        by_process_dataframe,
+        diversity_dataframe,
+        community_composition_dataframe,
     )
